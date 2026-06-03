@@ -319,6 +319,11 @@
         <div class="field"><textarea id="extras" style="min-height:100px" placeholder="Anything the boxes above didn't capture."></textarea></div>
       </div>
     </div>
+
+    <div class="card" style="text-align:center">
+      <button class="primary" type="button" onclick="copyOutput()">Copy request</button>
+      <div class="eg" style="margin-top:8px">Copies the same request shown in the live preview, ready to paste into your ticket.</div>
+    </div>
   </div>
 
   <!-- PREVIEW -->
@@ -524,6 +529,13 @@ function endEditor(endObj,blockId){
       el("option",{value:"fixed",selected:mode==="fixed"},"A fixed line / person"),
       el("option",{value:"dynamic",selected:mode==="dynamic"},"Depends on the caller's answer")));
     if(mode==="fixed"){
+      const known=knownDests().filter(d=>!(d.name===(endObj.name||"").trim()&&d.num===(endObj.num||"").trim()));
+      if(known.length){
+        const reuse=el("select",{style:"margin-top:7px",onchange:e=>{const i=e.target.value;if(i!==""){const d=known[+i];endObj.name=d.name;endObj.num=d.num;endObj.ext=d.ext;rerenderBlock(blockId);}touch();}},
+          el("option",{value:""},"-- reuse a destination, or fill in below --"));
+        known.forEach((d,i)=>reuse.append(el("option",{value:i},d.name+(d.num?" ("+d.num+")":""))));
+        box.append(reuse);
+      }
       box.append(el("div",{class:"dest-row",style:"margin-top:7px"},
         el("input",{type:"text",value:endObj.name,placeholder:"Who / where (e.g. Shawna, Billing)",oninput:e=>{endObj.name=e.target.value;touch();}}),
         el("input",{type:"text",value:endObj.num,placeholder:"Phone number",oninput:e=>{endObj.num=e.target.value;touch();}}),
@@ -582,17 +594,18 @@ function outcomeText(o){
   if(o.type==="route")return"go to "+(o.route?blockName(o.route):"[which caller type?]");
   return"";
 }
-function gatherDests(){
+function knownDests(){
   const out=[],seen=new Set();
-  const add=(n,num,ext)=>{if(!n&&!num)return;const k=(num||"").replace(/\D/g,"")||n.toLowerCase();if(seen.has(k))return;seen.add(k);
-    out.push("- "+(n||"[label]")+": "+(num||"[NUMBER NEEDED]")+(ext?" ext "+ext:""));};
+  const add=(n,num,ext)=>{const name=(n||"").trim(),number=(num||"").trim(),x=(ext||"").trim();
+    if(!name&&!number)return;const k=name.toLowerCase()+"|"+number.replace(/\D/g,"");if(seen.has(k))return;seen.add(k);out.push({name,num:number,ext:x});};
   Object.values(blocks).forEach(d=>{
     if(d.end.kind==="transfer"&&d.end.mode!=="dynamic")add(d.end.name,d.end.num,d.end.ext);
     d.steps.forEach(s=>{if(s.branches)s.branches.opts.forEach(o=>{if(o.outcome.type==="end"&&o.outcome.end.kind==="transfer"&&o.outcome.end.mode!=="dynamic")add(o.outcome.end.name,o.outcome.end.num,o.outcome.end.ext);});});
   });
-  document.querySelectorAll("#dest_list .dest-row").forEach(r=>add(r.querySelector(".d-name").value.trim(),r.querySelector(".d-number").value.trim(),r.querySelector(".d-ext").value.trim()));
+  document.querySelectorAll("#dest_list .dest-row").forEach(r=>add(r.querySelector(".d-name").value,r.querySelector(".d-number").value,r.querySelector(".d-ext").value));
   return out;
 }
+function gatherDests(){return knownDests().map(d=>"- "+(d.name||"[label]")+": "+(d.num||"[NUMBER NEEDED]")+(d.ext?" ext "+d.ext:""));}
 
 /* ---------- build text payload ---------- */
 function buildPayload(){
