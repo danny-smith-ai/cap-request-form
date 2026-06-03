@@ -355,12 +355,13 @@ const uid=()=>"s"+Math.random().toString(36).slice(2,9);
 /* tiny DOM helper */
 function el(tag,attrs){const e=document.createElement(tag);attrs=attrs||{};
   for(const k in attrs){const v=attrs[k];
-    if(v==null) continue;
+    if(v==null||v===false) continue;
     if(k==="class")e.className=v;
     else if(k==="html")e.innerHTML=v;
     else if(k==="text")e.textContent=v;
     else if(k==="value")e.value=v;
-    else if(k==="checked")e.checked=!!v;
+    else if(k==="checked")e.checked=true;
+    else if(k==="selected")e.selected=true;
     else if(k.slice(0,2)==="on"&&typeof v==="function")e.addEventListener(k.slice(2),v);
     else e.setAttribute(k,v);}
   for(let i=2;i<arguments.length;i++){let c=arguments[i];if(c==null)continue;
@@ -519,10 +520,10 @@ function endEditor(endObj,blockId){
   const box=el("div",{},sel);
   if(endObj.kind==="transfer"){
     box.append(el("div",{class:"dest-row",style:"margin-top:7px"},
-      el("input",{type:"text",value:endObj.name,placeholder:"Who (e.g. Shawna, Billing)",oninput:e=>{endObj.name=e.target.value;touch();}}),
+      el("input",{type:"text",value:endObj.name,placeholder:"Who / where (e.g. Shawna, Billing, their attorney)",oninput:e=>{endObj.name=e.target.value;touch();}}),
       el("input",{type:"text",value:endObj.num,placeholder:"Phone number",oninput:e=>{endObj.num=e.target.value;touch();}}),
       el("input",{type:"text",value:endObj.ext,placeholder:"Ext",oninput:e=>{endObj.ext=e.target.value;touch();}})),
-      el("div",{class:"eg"},"No number = we can't build the transfer."));
+      el("div",{class:"eg"},"Fixed line? Add the number. Contextual destination (e.g. their attorney)? Leave the number blank and note it in Extras."));
   }else if(endObj.kind==="message"||endObj.kind==="endcall"){
     box.append(el("textarea",{style:"margin-top:7px",value:endObj.text,placeholder:"What AIR says.",oninput:e=>{endObj.text=e.target.value;touch();}}));
   }else if(endObj.kind==="schedule"){
