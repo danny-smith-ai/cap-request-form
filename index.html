@@ -369,7 +369,7 @@ function el(tag,attrs){const e=document.createElement(tag);attrs=attrs||{};
   return e;}
 
 /* ---------- model defaults ---------- */
-function newEnd(){return{kind:"",name:"",num:"",ext:"",text:"",sType:"",sLen:"",sCal:""};}
+function newEnd(){return{kind:"",mode:"fixed",dyn:"",name:"",num:"",ext:"",text:"",sType:"",sLen:"",sCal:""};}
 function newOutcome(){return{type:"continue",collect:"",route:"",end:newEnd()};}
 function newStep(){return{id:uid(),q:"",branches:null};}
 function defaultBranches(){return{kind:"yesno",opts:[{label:"If yes",outcome:newOutcome()},{label:"If no",outcome:newOutcome()}]};}
@@ -519,11 +519,27 @@ function endEditor(endObj,blockId){
     el("option",{value:"schedule",selected:endObj.kind==="schedule"},"Schedule an appointment"));
   const box=el("div",{},sel);
   if(endObj.kind==="transfer"){
-    box.append(el("div",{class:"dest-row",style:"margin-top:7px"},
-      el("input",{type:"text",value:endObj.name,placeholder:"Who / where (e.g. Shawna, Billing, their attorney)",oninput:e=>{endObj.name=e.target.value;touch();}}),
-      el("input",{type:"text",value:endObj.num,placeholder:"Phone number",oninput:e=>{endObj.num=e.target.value;touch();}}),
-      el("input",{type:"text",value:endObj.ext,placeholder:"Ext",oninput:e=>{endObj.ext=e.target.value;touch();}})),
-      el("div",{class:"eg"},"Fixed line? Add the number. Contextual destination (e.g. their attorney)? Leave the number blank and note it in Extras."));
+    const mode=endObj.mode||"fixed";
+    box.append(el("select",{style:"margin-top:7px",onchange:e=>{endObj.mode=e.target.value;rerenderBlock(blockId);touch();}},
+      el("option",{value:"fixed",selected:mode==="fixed"},"A fixed line / person"),
+      el("option",{value:"dynamic",selected:mode==="dynamic"},"Depends on the caller's answer")));
+    if(mode==="fixed"){
+      box.append(el("div",{class:"dest-row",style:"margin-top:7px"},
+        el("input",{type:"text",value:endObj.name,placeholder:"Who / where (e.g. Shawna, Billing)",oninput:e=>{endObj.name=e.target.value;touch();}}),
+        el("input",{type:"text",value:endObj.num,placeholder:"Phone number",oninput:e=>{endObj.num=e.target.value;touch();}}),
+        el("input",{type:"text",value:endObj.ext,placeholder:"Ext",oninput:e=>{endObj.ext=e.target.value;touch();}})),
+        el("div",{class:"eg"},"No number = we can't build the transfer."));
+    }else{
+      const steps=(blocks[blockId]&&blocks[blockId].steps)||[];
+      if(steps.length){
+        const sel=el("select",{style:"margin-top:7px",onchange:e=>{endObj.dyn=e.target.value;touch();}},el("option",{value:""},"-- transfer based on the answer to... --"));
+        steps.forEach(s=>sel.append(el("option",{value:s.id,selected:endObj.dyn===s.id},s.q||"[question]")));
+        box.append(sel);
+      }else{
+        box.append(el("input",{type:"text",style:"margin-top:7px",value:endObj.dyn,placeholder:"Describe the destination (e.g. the attorney they name)",oninput:e=>{endObj.dyn=e.target.value;touch();}}));
+      }
+      box.append(el("div",{class:"eg"},"AIR transfers based on that answer. The build team will need a name-to-number directory; add it in Extras."));
+    }
   }else if(endObj.kind==="message"||endObj.kind==="endcall"){
     box.append(el("textarea",{style:"margin-top:7px",value:endObj.text,placeholder:"What AIR says.",oninput:e=>{endObj.text=e.target.value;touch();}}));
   }else if(endObj.kind==="schedule"){
@@ -547,9 +563,13 @@ function addDest(name,number,ext){
 
 /* ---------- helpers for output ---------- */
 function blockName(id){return blocks[id]?blocks[id].name:id;}
+function resolveDyn(id){for(const b of Object.values(blocks)){const s=(b.steps||[]).find(x=>x.id===id);if(s)return s.q||"[question]";}return id||"[which answer?]";}
 function endText(e){
   if(!e||!e.kind)return"";
-  if(e.kind==="transfer")return"Transfer to "+(e.name||"[name]")+" - "+(e.num||"[NUMBER NEEDED]")+(e.ext?" ext "+e.ext:"");
+  if(e.kind==="transfer"){
+    if(e.mode==="dynamic")return'Transfer based on the caller\'s answer to: "'+resolveDyn(e.dyn)+'" (needs name-to-number directory)';
+    return"Transfer to "+(e.name||"[name]")+" - "+(e.num||"[NUMBER NEEDED]")+(e.ext?" ext "+e.ext:"");
+  }
   if(e.kind==="message")return"Take a message"+(e.text?': "'+e.text+'"':"");
   if(e.kind==="endcall")return"End call"+(e.text?': "'+e.text+'"':"");
   if(e.kind==="schedule"){const p=[e.sType,e.sLen,e.sCal].filter(Boolean);return"Schedule"+(p.length?" ("+p.join(", ")+")":"");}
@@ -567,8 +587,8 @@ function gatherDests(){
   const add=(n,num,ext)=>{if(!n&&!num)return;const k=(num||"").replace(/\D/g,"")||n.toLowerCase();if(seen.has(k))return;seen.add(k);
     out.push("- "+(n||"[label]")+": "+(num||"[NUMBER NEEDED]")+(ext?" ext "+ext:""));};
   Object.values(blocks).forEach(d=>{
-    if(d.end.kind==="transfer")add(d.end.name,d.end.num,d.end.ext);
-    d.steps.forEach(s=>{if(s.branches)s.branches.opts.forEach(o=>{if(o.outcome.type==="end"&&o.outcome.end.kind==="transfer")add(o.outcome.end.name,o.outcome.end.num,o.outcome.end.ext);});});
+    if(d.end.kind==="transfer"&&d.end.mode!=="dynamic")add(d.end.name,d.end.num,d.end.ext);
+    d.steps.forEach(s=>{if(s.branches)s.branches.opts.forEach(o=>{if(o.outcome.type==="end"&&o.outcome.end.kind==="transfer"&&o.outcome.end.mode!=="dynamic")add(o.outcome.end.name,o.outcome.end.num,o.outcome.end.ext);});});
   });
   document.querySelectorAll("#dest_list .dest-row").forEach(r=>add(r.querySelector(".d-name").value.trim(),r.querySelector(".d-number").value.trim(),r.querySelector(".d-ext").value.trim()));
   return out;
@@ -624,8 +644,8 @@ function buildPayload(){
       d.steps.forEach(s=>{L.push("- Ask: "+(s.q||"[question?]"));
         if(s.branches)s.branches.opts.forEach(o=>{
           L.push("  - "+o.label+" -> "+outcomeText(o.outcome));
-          if(o.outcome.type==="end"&&o.outcome.end.kind==="transfer"&&!o.outcome.end.num)gaps.push("Transfer number in "+d.name);});});}
-    if(d.end.kind){L.push("");L.push("**End action:** "+endText(d.end));if(d.end.kind==="transfer"&&!d.end.num)gaps.push("Transfer number for "+d.name);}
+          if(o.outcome.type==="end"&&o.outcome.end.kind==="transfer"&&o.outcome.end.mode!=="dynamic"&&!o.outcome.end.num)gaps.push("Transfer number in "+d.name);});});}
+    if(d.end.kind){L.push("");L.push("**End action:** "+endText(d.end));if(d.end.kind==="transfer"&&d.end.mode!=="dynamic"&&!d.end.num)gaps.push("Transfer number for "+d.name);}
     else L.push("\n**End action:** differs by branch (see questions)");
     if(d.urgency.trim()){L.push("");L.push("**Urgency:** "+d.urgency.trim());}
     div();
@@ -647,7 +667,8 @@ function buildPayload(){
 /* ---------- build diagram ---------- */
 function chip(e){
   const c={transfer:"c-transfer",message:"c-message",endcall:"c-endcall",schedule:"c-schedule"}[e.kind]||"c-endcall";
-  return el("span",{class:"chip "+c},endText(e)||"end");
+  const label=(e.kind==="transfer"&&e.mode==="dynamic")?"transfer (by answer)":(endText(e)||"end");
+  return el("span",{class:"chip "+c},label);
 }
 function outcomeChip(o){
   if(o.type==="end")return chip(o.outcome?o.outcome.end:o.end||o.end);
