@@ -6,683 +6,745 @@
 <title>AIR CAP Request Form</title>
 <style>
   :root {
-    --bg: #f5f6f8;
-    --card: #ffffff;
-    --ink: #1f2430;
-    --muted: #6b7280;
-    --line: #e2e5ea;
-    --accent: #2f6df6;
-    --accent-dark: #1f51c4;
-    --warn: #b4540a;
-    --warn-bg: #fff4e6;
-    --ok: #1a7f43;
+    --bg:#f4f6f9; --card:#fff; --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea;
+    --accent:#2f6df6; --accent-dark:#1f51c4; --warn:#b4540a; --warn-bg:#fff6ea;
+    --ok:#1a7f43; --ok-bg:#e8f6ee; --soft:#f0f4ff;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.45;
-    font-size: 15px;
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-size:15px; line-height:1.45;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+
+  /* top bar */
+  .topbar { position:sticky; top:0; z-index:50; background:linear-gradient(135deg,#2f6df6,#1f51c4);
+    color:#fff; padding:12px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .topbar h1 { font-size:17px; margin:0; flex:0 0 auto; }
+  .topbar .sub { font-size:12px; opacity:.85; flex:1 1 auto; min-width:140px; }
+  .topbar .saved { font-size:12px; opacity:.9; min-width:62px; text-align:right; }
+  .topbar button { font-size:13px; }
+
+  .app { display:grid; grid-template-columns:200px 1fr 400px; gap:18px;
+    max-width:1440px; margin:0 auto; padding:18px; align-items:start; }
+
+  /* nav */
+  nav.toc { position:sticky; top:64px; max-height:calc(100vh - 80px); overflow:auto;
+    display:flex; flex-direction:column; gap:2px; }
+  nav.toc a { text-decoration:none; color:var(--muted); font-size:13.5px; padding:7px 10px;
+    border-radius:7px; border-left:3px solid transparent; }
+  nav.toc a:hover { background:#eef1f6; color:var(--ink); }
+  nav.toc a.active { background:var(--soft); color:var(--accent-dark); border-left-color:var(--accent); font-weight:600; }
+
+  /* cards */
+  .col-form { min-width:0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:18px 20px; margin-bottom:16px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+  .card > h2 { margin:0 0 3px; font-size:16px; }
+  .card .step { color:var(--accent); font-weight:700; margin-right:4px; }
+  .card .ask { color:var(--muted); font-size:13px; margin:0 0 16px; font-weight:400; }
+  .card.clp > h2 { cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; }
+
+  .field { margin-bottom:14px; }
+  label.lbl { display:block; font-weight:600; margin-bottom:5px; font-size:14px; }
+  label.lbl .opt { font-weight:400; color:var(--muted); font-size:12px; }
+  .eg { color:var(--muted); font-size:12px; margin-top:4px; }
+  input[type=text],input[type=date],textarea,select { width:100%; padding:9px 11px; border:1px solid var(--line);
+    border-radius:7px; font-size:14px; font-family:inherit; color:var(--ink); background:#fff; }
+  textarea { resize:vertical; min-height:80px; }
+  input:focus,textarea:focus,select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(47,109,246,.12); }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .row > .field { flex:1; min-width:180px; }
+  .checks { display:flex; flex-wrap:wrap; gap:8px 18px; }
+  .checks label { font-weight:400; font-size:14px; display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .sub { border-left:3px solid var(--line); padding-left:16px; margin-top:12px; }
+  .hidden { display:none !important; }
+
+  /* tooltip */
+  .tip { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px;
+    border-radius:50%; background:#dfe5ef; color:#4a5568; font-size:11px; font-weight:700;
+    margin-left:5px; cursor:help; }
+
+  /* legend */
+  .legend { background:var(--soft); border:1px solid #d6e0fb; border-radius:8px; padding:11px 13px;
+    font-size:13px; margin-bottom:16px; }
+  .legend b { color:var(--accent-dark); }
+
+  /* caller blocks */
+  .caller-block { border:1px solid var(--line); border-radius:9px; margin-bottom:12px; background:#fcfcfd; overflow:hidden; }
+  .block-head { display:flex; align-items:center; gap:8px; padding:11px 14px; cursor:pointer;
+    background:#f6f8fb; font-weight:600; font-size:14.5px; color:var(--accent-dark); }
+  .block-head .caret { transition:transform .15s; font-size:12px; color:var(--muted); }
+  .caller-block.collapsed .caret { transform:rotate(-90deg); }
+  .caller-block.collapsed .block-body { display:none; }
+  .block-body { padding:14px; }
+
+  .dest-row { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .dest-row input { flex:1; min-width:110px; }
+
+  button { font-family:inherit; font-size:14px; border-radius:7px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); padding:8px 13px; cursor:pointer; }
+  button:hover { background:#f0f2f5; }
+  .topbar button { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.25); color:#fff; }
+  .topbar button:hover { background:rgba(255,255,255,.26); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  button.primary:hover { background:var(--accent-dark); }
+  .topbar button.primary { background:#fff; color:var(--accent-dark); }
+  button.small { padding:5px 10px; font-size:13px; }
+  button.danger { color:#b42318; border-color:#f0c4c0; background:#fff; }
+
+  /* preview rail */
+  aside.preview { position:sticky; top:64px; max-height:calc(100vh - 80px); display:flex; flex-direction:column; }
+  .preview h3 { margin:0 0 8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+  .gaps { background:var(--warn-bg); border:1px solid #f2d9b8; color:var(--warn); border-radius:8px;
+    padding:9px 11px; font-size:12.5px; margin-bottom:8px; }
+  .gaps ul { margin:6px 0 0; padding-left:18px; }
+  .gaps.clean { background:var(--ok-bg); border-color:#bfe3cd; color:var(--ok); }
+  pre#preview { flex:1; overflow:auto; background:#0f1729; color:#e6edf6; border-radius:9px; padding:14px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; line-height:1.5; white-space:pre-wrap; margin:0; }
+  .copied { color:var(--ok); font-weight:600; font-size:12px; }
+
+  /* restore banner */
+  .banner { background:var(--ok-bg); border:1px solid #bfe3cd; color:var(--ok); border-radius:9px;
+    padding:10px 13px; margin-bottom:16px; font-size:13.5px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+
+  @media (max-width:1100px) {
+    .app { grid-template-columns:1fr; }
+    nav.toc { display:none; }
+    aside.preview { position:static; max-height:none; }
+    pre#preview { max-height:50vh; }
   }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 28px 18px 80px; }
-  header.top {
-    background: linear-gradient(135deg, #2f6df6, #1f51c4);
-    color: #fff;
-    padding: 26px 18px;
-    text-align: center;
-  }
-  header.top h1 { margin: 0 0 6px; font-size: 22px; }
-  header.top p { margin: 0; opacity: 0.9; font-size: 14px; }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 18px;
-    box-shadow: 0 1px 2px rgba(16,24,40,0.04);
-  }
-  .card h2 {
-    margin: 0 0 4px;
-    font-size: 17px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .card .hint { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
-  .field { margin-bottom: 14px; }
-  label.lbl { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
-  label.lbl .opt { font-weight: 400; color: var(--muted); font-size: 12px; }
-  input[type="text"], input[type="date"], textarea, select {
-    width: 100%;
-    padding: 9px 11px;
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--ink);
-    background: #fff;
-  }
-  textarea { resize: vertical; min-height: 84px; }
-  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,109,246,0.12); }
-  .row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .row > .field { flex: 1; min-width: 200px; }
-  .checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
-  .checks label { font-weight: 400; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-  .sub {
-    border-left: 3px solid var(--line);
-    padding-left: 16px;
-    margin-top: 12px;
-  }
-  .hidden { display: none !important; }
-  .caller-block {
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    padding: 16px;
-    margin-bottom: 14px;
-    background: #fcfcfd;
-  }
-  .caller-block h3 { margin: 0 0 12px; font-size: 15px; color: var(--accent-dark); }
-  .dest-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-  .dest-row input { flex: 1; min-width: 120px; }
-  button {
-    font-family: inherit;
-    font-size: 14px;
-    border-radius: 7px;
-    border: 1px solid var(--line);
-    background: #fff;
-    color: var(--ink);
-    padding: 8px 14px;
-    cursor: pointer;
-  }
-  button:hover { background: #f0f2f5; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  button.primary:hover { background: var(--accent-dark); }
-  button.small { padding: 5px 10px; font-size: 13px; }
-  button.danger { color: #b42318; border-color: #f0c4c0; }
-  .note {
-    background: var(--warn-bg);
-    border: 1px solid #f2d9b8;
-    color: var(--warn);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 13px;
-    margin-bottom: 16px;
-  }
-  .actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  #output { width: 100%; min-height: 280px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
-  .out-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
-  .copied { color: var(--ok); font-weight: 600; font-size: 13px; }
-  .ph { color: var(--muted); }
 </style>
 </head>
 <body>
-<header class="top">
-  <h1>AIR CAP Request Form</h1>
-  <p>Client Onboarding fills this out, then copies the generated request into the build ticket.</p>
-</header>
 
-<div class="wrap">
+<div class="topbar">
+  <h1>AIR CAP Request</h1>
+  <span class="sub">Fill this out, then copy the request into your build ticket.</span>
+  <button class="small" type="button" onclick="loadExample()">Load example</button>
+  <button class="small" type="button" onclick="resetForm()">Reset</button>
+  <button class="small primary" type="button" onclick="copyOutput()">Copy request</button>
+  <span class="saved" id="saved"></span>
+</div>
 
-  <div class="note">
-    Fill what applies, skip what doesn't. If the firm hasn't given you something, leave it blank or type
-    <strong>[NEED FROM FIRM]</strong> in the box so the gap is visible. Every transfer needs a real phone number.
-  </div>
+<div class="app">
 
-  <!-- ACCOUNT -->
-  <div class="card">
-    <h2>1. Account</h2>
-    <p class="hint">Who is this CAP for.</p>
-    <div class="row">
+  <!-- NAV -->
+  <nav class="toc" id="toc"></nav>
+
+  <!-- FORM -->
+  <div class="col-form">
+
+    <div class="banner hidden" id="banner">
+      <span>Draft restored from where you left off.</span>
+      <button class="small" type="button" onclick="startFresh()">Start fresh</button>
+    </div>
+
+    <!-- 1 ACCOUNT -->
+    <div class="card" id="sec-account">
+      <h2><span class="step">1.</span>Who is this for?</h2>
+      <p class="ask">The firm this AI receptionist setup belongs to.</p>
+      <div class="row">
+        <div class="field">
+          <label class="lbl">Account / firm name</label>
+          <input type="text" id="acct_name" placeholder="Chalk Law Office">
+        </div>
+        <div class="field">
+          <label class="lbl">Needed by <span class="opt">(optional)</span></label>
+          <input type="date" id="needed_by">
+        </div>
+      </div>
       <div class="field">
-        <label class="lbl">Account / firm name</label>
-        <input type="text" id="acct_name" placeholder="e.g. Chalk Law Office">
+        <label class="lbl">Your name <span class="opt">(optional)</span></label>
+        <input type="text" id="cob_name" placeholder="So the build team knows who to follow up with">
+      </div>
+    </div>
+
+    <!-- 2 GREETING -->
+    <div class="card" id="sec-greeting">
+      <h2><span class="step">2.</span>How does AIR answer the phone?</h2>
+      <p class="ask">The exact opening line. If AIR uses a name, just put it in the line (e.g. "This is Joe").</p>
+      <div class="field">
+        <label class="lbl">Greeting</label>
+        <input type="text" id="greeting" placeholder="Thanks for calling Clog Squad. How can I help you today?">
+      </div>
+    </div>
+
+    <!-- 3 HOURS -->
+    <div class="card" id="sec-hours">
+      <h2><span class="step">3.</span>Does anything change after hours?</h2>
+      <p class="ask">Skip if the firm is handled the same way around the clock.</p>
+      <div class="field">
+        <label class="lbl">Business hours <span class="opt">(optional)</span></label>
+        <input type="text" id="biz_hours" placeholder="Mon-Fri 8am-5pm PT">
       </div>
       <div class="field">
-        <label class="lbl">Needed by <span class="opt">(optional)</span></label>
-        <input type="date" id="needed_by">
-      </div>
-    </div>
-    <div class="field">
-      <label class="lbl">Your name (COB) <span class="opt">(optional)</span></label>
-      <input type="text" id="cob_name" placeholder="So the build team knows who to follow up with">
-    </div>
-  </div>
-
-  <!-- GREETING -->
-  <div class="card">
-    <h2>2. Greeting</h2>
-    <p class="hint">How AIR opens the call. If AIR uses a name, just include it in the line (e.g. "This is Joe").</p>
-    <div class="field">
-      <label class="lbl">Greeting line (write it exactly as AIR should say it)</label>
-      <input type="text" id="greeting" placeholder='e.g. Thanks for calling Clog Squad. How can I help you today?'>
-    </div>
-  </div>
-
-  <!-- HOURS -->
-  <div class="card">
-    <h2>3. Hours</h2>
-    <p class="hint">Only matters if call handling changes after hours.</p>
-    <div class="field">
-      <label class="lbl">Business hours <span class="opt">(optional)</span></label>
-      <input type="text" id="biz_hours" placeholder="e.g. Mon-Fri 8am-5pm PT">
-    </div>
-    <div class="field">
-      <label class="lbl">After-hours handling</label>
-      <select id="after_hours" onchange="toggleAfterHours()">
-        <option value="">Same as business hours</option>
-        <option value="messages">All transfers become a take-a-message after hours</option>
-        <option value="custom">Custom (describe)</option>
-      </select>
-      <div id="after_hours_custom_wrap" class="sub hidden">
-        <label class="lbl">Describe after-hours handling</label>
-        <textarea id="after_hours_custom" placeholder="e.g. After 6pm PT, emergency calls still transfer to the on-call line; everything else takes a message."></textarea>
-      </div>
-    </div>
-  </div>
-
-  <!-- ROUTING -->
-  <div class="card">
-    <h2>4. Routing</h2>
-    <p class="hint">How AIR sorts callers, and any gate before routing.</p>
-
-    <div class="field">
-      <label class="lbl">Does this CAP ride on the native playbooks or define its own routing?</label>
-      <select id="routing_mode">
-        <option value="native">Rides on native playbooks (PNC / EC / Attorney / All Other Calls)</option>
-        <option value="custom">Custom routing (the CAP defines the caller types itself)</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label class="lbl">Which caller types / routes will this CAP use?</label>
-      <div class="checks">
-        <label><input type="checkbox" class="ct" value="PNC" data-id="pnc" onchange="syncBlocks()"> Potential New Clients (PNC)</label>
-        <label><input type="checkbox" class="ct" value="Existing Clients" data-id="ec" onchange="syncBlocks()"> Existing Clients (EC)</label>
-        <label><input type="checkbox" class="ct" value="Attorney / Court Staff" data-id="acs" onchange="syncBlocks()"> Attorney / Court Staff</label>
-        <label><input type="checkbox" class="ct" value="All Other Calls" data-id="aoc" onchange="syncBlocks()"> All Other Calls</label>
-      </div>
-      <div class="sub">
-        <label class="lbl">Add a custom caller type / route <span class="opt">(e.g. Billing, Student/Parent, School)</span></label>
-        <div class="dest-row">
-          <input type="text" id="custom_type_input" placeholder="Type a name and click Add">
-          <button class="small" type="button" onclick="addCustomType()">+ Add type</button>
+        <label class="lbl">After-hours handling</label>
+        <select id="after_hours" onchange="toggleAfterHours()">
+          <option value="">Same as business hours</option>
+          <option value="messages">Transfers become a take-a-message after hours</option>
+          <option value="custom">Something else (describe)</option>
+        </select>
+        <div id="after_hours_custom_wrap" class="sub hidden">
+          <label class="lbl">Describe it</label>
+          <textarea id="after_hours_custom" placeholder="After 6pm PT, emergencies still go to the on-call line; everything else takes a message."></textarea>
         </div>
       </div>
     </div>
 
-    <div class="field">
-      <label class="lbl">Is there a triage question right after the greeting that sorts the caller?</label>
-      <div class="checks">
-        <label><input type="radio" name="triage" value="no" checked onchange="toggleTriage()"> No</label>
-        <label><input type="radio" name="triage" value="yes" onchange="toggleTriage()"> Yes</label>
+    <!-- 4 ROUTING -->
+    <div class="card" id="sec-routing">
+      <h2><span class="step">4.</span>Who might call, and how does AIR sort them?</h2>
+      <p class="ask">Pick the kinds of callers. A section for each one shows up below.</p>
+
+      <div class="field">
+        <label class="lbl">What kind of caller categories does the firm use?
+          <span class="tip" title="Smith's standard categories: New clients (PNC), Existing clients (EC), Attorney/Court staff, and All other calls. 'Custom' means you name the caller types yourself, like Service Request, Billing, Student.">i</span>
+        </label>
+        <select id="routing_mode">
+          <option value="native">Smith's standard categories (New / Existing / Attorney / All other)</option>
+          <option value="custom">Custom categories I'll name myself</option>
+        </select>
       </div>
-      <div id="triage_wrap" class="sub hidden">
+
+      <div class="field">
+        <label class="lbl">Which caller types will this use?</label>
+        <div class="checks">
+          <label><input type="checkbox" class="ct" value="Potential New Clients" data-id="pnc" onchange="syncBlocks()"> New clients <span class="opt">(PNC)</span></label>
+          <label><input type="checkbox" class="ct" value="Existing Clients" data-id="ec" onchange="syncBlocks()"> Existing clients <span class="opt">(EC)</span></label>
+          <label><input type="checkbox" class="ct" value="Attorney / Court Staff" data-id="acs" onchange="syncBlocks()"> Attorney / Court staff</label>
+          <label><input type="checkbox" class="ct" value="All Other Calls" data-id="aoc" onchange="syncBlocks()"> All other calls</label>
+        </div>
+        <div class="sub">
+          <label class="lbl">Add your own caller type <span class="opt">(e.g. Billing, Service Request, Student)</span></label>
+          <div class="dest-row">
+            <input type="text" id="custom_type_input" placeholder="Type a name, then click Add" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomType();}">
+            <button class="small" type="button" onclick="addCustomType()">+ Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Does AIR ask a sorting question right after the greeting?
+          <span class="tip" title="A question that decides which caller type this is, e.g. 'Are you calling about a new matter or an existing case?' or 'What kind of issue are you having today?'">i</span>
+        </label>
+        <div class="checks">
+          <label><input type="radio" name="triage" value="no" checked onchange="toggleTriage()"> No</label>
+          <label><input type="radio" name="triage" value="yes" onchange="toggleTriage()"> Yes</label>
+        </div>
+        <div id="triage_wrap" class="sub hidden">
+          <div class="field">
+            <label class="lbl">The question (word it exactly)</label>
+            <input type="text" id="triage_q" placeholder="Can I ask what kind of issue you're experiencing today?">
+          </div>
+          <div class="field">
+            <label class="lbl">The choices it sorts into <span class="opt">(one per line)</span></label>
+            <textarea id="triage_opts" placeholder="Drain cleaning&#10;Flooding / basement water&#10;Equipment inquiries&#10;All other callers"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Is there a yes/no gate BEFORE sorting that can turn a caller away?
+          <span class="tip" title="A qualifier the caller must pass before AIR continues, e.g. 'Was the injury in California?' If they fail it, AIR handles them differently (often just takes a message and ends).">i</span>
+        </label>
+        <div class="checks">
+          <label><input type="radio" name="gate" value="no" checked onchange="toggleGate()"> No</label>
+          <label><input type="radio" name="gate" value="yes" onchange="toggleGate()"> Yes</label>
+        </div>
+        <div id="gate_wrap" class="sub hidden">
+          <div class="field">
+            <label class="lbl">The gate question (word it exactly)</label>
+            <input type="text" id="gate_q" placeholder="Were you hired in, or did the injury occur in California?">
+          </div>
+          <div class="field">
+            <label class="lbl">Which answer turns them away?</label>
+            <input type="text" id="gate_fail" placeholder="No / outside California">
+          </div>
+          <div class="field">
+            <label class="lbl">If turned away, what does AIR collect first? <span class="opt">(optional)</span></label>
+            <input type="text" id="gate_collect" placeholder="Name, Number, Email, Reason, How they heard about us">
+          </div>
+          <div class="field">
+            <label class="lbl">If turned away, how does the call end?</label>
+            <textarea id="gate_end" placeholder="End the call thanking them and letting them know the details will be passed to the appropriate team."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 PNC SPECIFICS -->
+    <div class="card hidden" id="sec-pnc">
+      <h2><span class="step">5.</span>New-client details</h2>
+      <p class="ask">Showing because you picked New clients.</p>
+      <div class="field">
+        <label class="lbl">Does the firm split new clients by service or practice area?
+          <span class="tip" title="Single = every new client is handled the same way. Multiple = different services (e.g. Workers' Comp vs SSDI) ask different questions or go to different places.">i</span>
+        </label>
+        <select id="pnc_mode" onchange="togglePnc()">
+          <option value="single">No, one path for all new clients</option>
+          <option value="multiple">Yes, multiple services / practice areas</option>
+        </select>
+        <div id="pnc_sub_wrap" class="sub hidden">
+          <label class="lbl">List the services / practice areas <span class="opt">(one per line)</span></label>
+          <textarea id="pnc_subs" placeholder="Workers' Compensation&#10;Social Security Disability (SSDI/SSI)"></textarea>
+          <div class="eg">Describe each one's questions and ending in the New-clients block below, or in Extras.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Does the firm turn away some leads (wrong practice area or location)?</label>
+        <div class="checks">
+          <label><input type="radio" name="qualify" value="no" checked onchange="toggleQualify()"> No</label>
+          <label><input type="radio" name="qualify" value="yes" onchange="toggleQualify()"> Yes</label>
+        </div>
+        <div id="qualify_wrap" class="sub hidden">
+          <div class="field">
+            <label class="lbl">Practice areas the firm handles <span class="opt">(one per line)</span></label>
+            <textarea id="practice_areas" placeholder="Personal injury&#10;Employment law&#10;Lemon law"></textarea>
+          </div>
+          <div class="field">
+            <label class="lbl">For practice areas NOT on that list, AIR should:</label>
+            <select id="practice_not_listed">
+              <option value="">-- choose --</option>
+              <option>Take a message for review, and do NOT say it's outside what they offer</option>
+              <option>Take a message for review, and tell the caller it's outside what they offer</option>
+              <option>Refer the caller out (add referral details in Extras)</option>
+              <option>Politely say we can't assist</option>
+              <option>Don't turn anyone away; continue as usual</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="lbl">Service areas the firm covers <span class="opt">(if location matters; one per line)</span></label>
+            <textarea id="service_areas" placeholder="California&#10;(or counties / zips)"></textarea>
+          </div>
+          <div class="field">
+            <label class="lbl">For locations NOT covered, AIR should:</label>
+            <select id="area_not_listed">
+              <option value="">-- choose --</option>
+              <option>Take a message for review, and do NOT say it's outside the area</option>
+              <option>Take a message for review, and tell the caller it's outside the area</option>
+              <option>Refer the caller out (add referral details in Extras)</option>
+              <option>Politely say we can't assist</option>
+              <option>Don't turn anyone away; continue as usual</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 CALLER BLOCKS -->
+    <div class="card" id="sec-callers">
+      <h2><span class="step">6.</span>What does AIR do for each caller?</h2>
+      <p class="ask">One block per caller type you picked. Click a block's title to open or close it.</p>
+      <div class="legend">
+        <b>Collect</b> = the data points AIR writes down (Name, Number, Email...).&nbsp;
+        <b>Intake / questions</b> = the things AIR asks about the situation, including any "if yes / if no" branches.&nbsp;
+        <b>End action</b> = how AIR wraps up (transfer, take a message, schedule, or end the call).
+      </div>
+      <div id="caller_blocks"></div>
+      <p class="eg" id="no_blocks_msg">Pick caller types in step 4 and their blocks appear here.</p>
+    </div>
+
+    <!-- 7 DESTINATIONS -->
+    <div class="card" id="sec-dest">
+      <h2><span class="step">7.</span>Transfer destinations</h2>
+      <p class="ask">Any transfer you set in a block above is collected automatically (see the preview). Only add a row here for a destination that's mentioned ONLY inside a flow's text.</p>
+      <div id="dest_list"></div>
+      <button class="small" type="button" onclick="addDest()">+ Add extra destination</button>
+    </div>
+
+    <!-- 8 CROSS-CUTTING -->
+    <div class="card clp" id="sec-cross">
+      <h2 onclick="toggleCard(this)">8. Rules for any caller <span class="caret">▾</span></h2>
+      <div class="card-body">
+        <p class="ask">Optional. Things that apply no matter which caller type.</p>
         <div class="field">
-          <label class="lbl">The triage question (verbatim)</label>
-          <input type="text" id="triage_q" placeholder="e.g. Can I ask what kind of issue you're experiencing today?">
+          <label class="lbl">If the caller asks for a human, AIR should: <span class="opt">(optional)</span></label>
+          <input type="text" id="human_rule" placeholder="Transfer to Veronica">
         </div>
         <div class="field">
-          <label class="lbl">The options it sorts into (one per line)</label>
-          <textarea id="triage_opts" placeholder="Drain cleaning&#10;Flooding / basement water&#10;Equipment inquiries&#10;All other callers"></textarea>
+          <label class="lbl">If the caller has a question the FAQs don't cover, AIR should: <span class="opt">(optional)</span></label>
+          <input type="text" id="faq_rule" placeholder="Transfer to Veronica">
+        </div>
+        <div class="field">
+          <label class="lbl">Spam / sales calls: <span class="opt">(optional)</span></label>
+          <input type="text" id="spam_rule" placeholder="End the call">
         </div>
       </div>
     </div>
 
-    <div class="field">
-      <label class="lbl">Is there a qualifier / disqualifier gate BEFORE routing?</label>
-      <div class="checks">
-        <label><input type="radio" name="gate" value="no" checked onchange="toggleGate()"> No</label>
-        <label><input type="radio" name="gate" value="yes" onchange="toggleGate()"> Yes</label>
-      </div>
-      <div id="gate_wrap" class="sub hidden">
+    <!-- 9 EXTRAS -->
+    <div class="card clp" id="sec-extras">
+      <h2 onclick="toggleCard(this)">9. Anything else <span class="caret">▾</span></h2>
+      <div class="card-body">
+        <p class="ask">Optional. Required exact phrases, referral details, FAQ content, scheduling specifics, edge cases.</p>
         <div class="field">
-          <label class="lbl">The gate question (verbatim)</label>
-          <input type="text" id="gate_q" placeholder="e.g. Were you hired in, or did the injury occur in California?">
-        </div>
-        <div class="field">
-          <label class="lbl">What answer disqualifies the caller?</label>
-          <input type="text" id="gate_fail" placeholder="e.g. No / outside California">
-        </div>
-        <div class="field">
-          <label class="lbl">On a disqualifying answer, what should AIR collect (if anything)?</label>
-          <input type="text" id="gate_collect" placeholder="e.g. Name, Number, Email, Reason, How they heard about us">
-        </div>
-        <div class="field">
-          <label class="lbl">On a disqualifying answer, how does the call end?</label>
-          <textarea id="gate_end" placeholder='e.g. End the call with a message thanking them, letting them know the details will be passed to the appropriate team.'></textarea>
+          <textarea id="extras" style="min-height:110px" placeholder="Anything the boxes above didn't capture."></textarea>
         </div>
       </div>
     </div>
+
   </div>
 
-  <!-- PNC SPECIFICS -->
-  <div class="card hidden" id="pnc_card">
-    <h2>5. PNC specifics</h2>
-    <p class="hint">Shown because you selected Potential New Clients.</p>
-    <div class="field">
-      <label class="lbl">Single PNC playbook, or multiple sub-playbooks (services / practice areas)?</label>
-      <select id="pnc_mode" onchange="togglePnc()">
-        <option value="single">Single PNC playbook</option>
-        <option value="multiple">Multiple sub-playbooks</option>
-      </select>
-      <div id="pnc_sub_wrap" class="sub hidden">
-        <label class="lbl">List the sub-playbooks / practice areas (one per line)</label>
-        <textarea id="pnc_subs" placeholder="Workers' Compensation&#10;Social Security Disability (SSDI/SSI)"></textarea>
-        <p class="hint" style="margin-top:8px">Describe the intake and end action for each sub-playbook in the PNC block under section 6 (or in Extras), since each can differ.</p>
-      </div>
-    </div>
-    <div class="field">
-      <label class="lbl">Does the firm qualify leads (turn some away)?</label>
-      <div class="checks">
-        <label><input type="radio" name="qualify" value="no" checked onchange="toggleQualify()"> No</label>
-        <label><input type="radio" name="qualify" value="yes" onchange="toggleQualify()"> Yes</label>
-      </div>
-      <div id="qualify_wrap" class="sub hidden">
-        <div class="field">
-          <label class="lbl">Practice areas the firm handles (one per line)</label>
-          <textarea id="practice_areas" placeholder="Personal injury&#10;Employment law&#10;Lemon law"></textarea>
-        </div>
-        <div class="field">
-          <label class="lbl">For practice areas NOT listed, AIR should:</label>
-          <select id="practice_not_listed">
-            <option value="">-- choose --</option>
-            <option>Take a message for review, and DO NOT advise it is outside the service offered</option>
-            <option>Take a message for review, and advise it is outside the service offered</option>
-            <option>Provide a referral to the caller (add referral details in Extras)</option>
-            <option>Politely advise we cannot assist</option>
-            <option>Do not disqualify anyone; continue as usual</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="lbl">Service areas the firm covers <span class="opt">(if location-gated; one per line)</span></label>
-          <textarea id="service_areas" placeholder="California&#10;(or list of zips / counties)"></textarea>
-        </div>
-        <div class="field">
-          <label class="lbl">For areas NOT covered, AIR should:</label>
-          <select id="area_not_listed">
-            <option value="">-- choose --</option>
-            <option>Take a message for review, and DO NOT advise it is outside the area supported</option>
-            <option>Take a message for review, and advise it is outside the area supported</option>
-            <option>Provide a referral to the caller (add referral details in Extras)</option>
-            <option>Politely advise we cannot assist</option>
-            <option>Do not disqualify anyone; continue as usual</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CALLER TYPE BLOCKS -->
-  <div class="card">
-    <h2>6. Per caller type / route</h2>
-    <p class="hint">A block appears here for each caller type you selected above. Fill in what AIR collects, the intake questions and any branches, and how the call ends.</p>
-    <div id="caller_blocks"></div>
-    <p class="hint" id="no_blocks_msg">Select caller types in section 4 and their blocks will show up here.</p>
-  </div>
-
-  <!-- TRANSFER DESTINATIONS -->
-  <div class="card">
-    <h2>7. Transfer destinations</h2>
-    <p class="hint">List every place a call can be transferred to. Pull these from the flows above. No number, no transfer.</p>
-    <div id="dest_list"></div>
-    <button class="small" type="button" onclick="addDest()">+ Add destination</button>
-  </div>
-
-  <!-- CROSS-CUTTING -->
-  <div class="card">
-    <h2>8. Cross-cutting rules</h2>
-    <p class="hint">Rules that apply no matter which route the caller is on.</p>
-    <div class="field">
-      <label class="lbl">If the caller asks for a human / representative, AIR should: <span class="opt">(optional)</span></label>
-      <input type="text" id="human_rule" placeholder="e.g. Transfer to Veronica">
-    </div>
-    <div class="field">
-      <label class="lbl">If the caller has a question not covered by the FAQs, AIR should: <span class="opt">(optional)</span></label>
-      <input type="text" id="faq_rule" placeholder="e.g. Transfer to Veronica">
-    </div>
-    <div class="field">
-      <label class="lbl">Spam / sales call handling <span class="opt">(optional)</span></label>
-      <input type="text" id="spam_rule" placeholder="e.g. End the call; or route sales to a specific line">
-    </div>
-  </div>
-
-  <!-- EXTRAS -->
-  <div class="card">
-    <h2>9. Extras</h2>
-    <p class="hint">Anything the fields above didn't capture: required verbatim phrases, special edge cases, referral details, FAQ content, scheduling specifics, etc.</p>
-    <div class="field">
-      <textarea id="extras" style="min-height:120px" placeholder="Anything else the build team needs to know."></textarea>
-    </div>
-  </div>
-
-  <!-- GENERATE -->
-  <div class="card">
-    <div class="actions">
-      <button class="primary" type="button" onclick="generate()">Generate request</button>
-      <button type="button" onclick="resetForm()">Reset form</button>
-    </div>
-  </div>
-
-  <!-- OUTPUT -->
-  <div class="card hidden" id="output_card">
-    <div class="out-head">
-      <h2 style="margin:0">Copy this into the ticket</h2>
-      <div class="actions">
-        <button class="primary small" type="button" onclick="copyOutput()">Copy to clipboard</button>
-        <span id="copied_msg" class="copied hidden">Copied</span>
-      </div>
-    </div>
-    <textarea id="output" readonly></textarea>
-  </div>
+  <!-- PREVIEW -->
+  <aside class="preview">
+    <h3>Live preview <span class="copied hidden" id="copied_msg">Copied</span></h3>
+    <div id="gaps_box" class="gaps clean">Looks complete.</div>
+    <pre id="preview"></pre>
+  </aside>
 
 </div>
 
 <script>
-  // ---- field-group definitions ----
-  const COLLECT_FIELDS = ["Name", "Number", "Email", "Reason for call", "Address", "How did you hear about us", "Referral source"];
-
-  // ---- conditional toggles ----
-  function show(el, on) { el.classList.toggle("hidden", !on); }
-  function toggleAfterHours() { show(document.getElementById("after_hours_custom_wrap"), document.getElementById("after_hours").value === "custom"); }
-  function toggleTriage() { show(document.getElementById("triage_wrap"), document.querySelector('input[name=triage]:checked').value === "yes"); }
-  function toggleGate() { show(document.getElementById("gate_wrap"), document.querySelector('input[name=gate]:checked').value === "yes"); }
-  function togglePnc() { show(document.getElementById("pnc_sub_wrap"), document.getElementById("pnc_mode").value === "multiple"); }
-  function toggleQualify() { show(document.getElementById("qualify_wrap"), document.querySelector('input[name=qualify]:checked').value === "yes"); }
-
-  // ---- caller type blocks ----
+  const COLLECT_FIELDS = ["Name","Number","Email","Reason for call","Address","How did you hear about us","Referral source"];
+  const FIELD_IDS = ["acct_name","needed_by","cob_name","greeting","biz_hours","after_hours","after_hours_custom",
+    "routing_mode","triage_q","triage_opts","gate_q","gate_fail","gate_collect","gate_end",
+    "pnc_mode","pnc_subs","practice_areas","practice_not_listed","service_areas","area_not_listed",
+    "human_rule","faq_rule","spam_rule","extras"];
+  const NAV = [["sec-account","1. Who is this for"],["sec-greeting","2. Greeting"],["sec-hours","3. After hours"],
+    ["sec-routing","4. Callers & sorting"],["sec-pnc","5. New-client details"],["sec-callers","6. Per caller type"],
+    ["sec-dest","7. Destinations"],["sec-cross","8. Rules for any caller"],["sec-extras","9. Anything else"]];
+  const STORE = "air_cap_request_v2";
   const customTypes = [];
+  let lastPayload = "";
 
-  function selectedNativeTypes() {
-    return Array.from(document.querySelectorAll(".ct:checked")).map(c => ({ name: c.value, id: c.dataset.id }));
+  const $ = id => document.getElementById(id);
+  const show = (el,on) => el && el.classList.toggle("hidden", !on);
+  const radio = n => { const e=document.querySelector('input[name='+n+']:checked'); return e?e.value:null; };
+  const val = id => { const e=$(id); return e?e.value.trim():""; };
+  const lines = v => v.split("\n").map(s=>s.trim()).filter(Boolean);
+
+  /* ---------- conditional toggles ---------- */
+  function toggleAfterHours(){ show($("after_hours_custom_wrap"), $("after_hours").value==="custom"); }
+  function toggleTriage(){ show($("triage_wrap"), radio("triage")==="yes"); }
+  function toggleGate(){ show($("gate_wrap"), radio("gate")==="yes"); }
+  function togglePnc(){ show($("pnc_sub_wrap"), $("pnc_mode").value==="multiple"); }
+  function toggleQualify(){ show($("qualify_wrap"), radio("qualify")==="yes"); }
+  function toggleCard(h){ const b=h.parentNode.querySelector(".card-body"); const open=b.style.display!=="none";
+    b.style.display=open?"none":"block"; h.querySelector(".caret").style.transform=open?"rotate(-90deg)":""; }
+  function syncConditionals(){ toggleAfterHours(); toggleTriage(); toggleGate(); togglePnc(); toggleQualify();
+    document.querySelectorAll(".caller-block .end-action").forEach(s=>toggleEnd(s)); }
+
+  /* ---------- caller types ---------- */
+  function selectedNativeTypes(){ return Array.from(document.querySelectorAll(".ct:checked")).map(c=>({name:c.value,id:c.dataset.id})); }
+  function allTypes(){ return selectedNativeTypes().concat(customTypes); }
+
+  function addCustomType(){
+    const inp=$("custom_type_input"); const name=inp.value.trim(); if(!name) return;
+    const id="custom_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_");
+    if(customTypes.find(t=>t.id===id)){ inp.value=""; return; }
+    customTypes.push({name,id}); inp.value=""; syncBlocks(); touch();
+  }
+  function removeCustomType(id){ const i=customTypes.findIndex(t=>t.id===id); if(i>-1) customTypes.splice(i,1); syncBlocks(); touch(); }
+
+  function syncBlocks(){
+    const pncOn = !!selectedNativeTypes().find(t=>t.id==="pnc");
+    show($("sec-pnc"), pncOn);
+    const pncNav=document.querySelector('nav.toc a[href="#sec-pnc"]'); if(pncNav) show(pncNav,pncOn);
+    const c=$("caller_blocks"); const types=allTypes(); const wanted=new Set(types.map(t=>t.id));
+    Array.from(c.querySelectorAll(".caller-block")).forEach(b=>{ if(!wanted.has(b.dataset.id)) b.remove(); });
+    types.forEach(t=>{ if(!c.querySelector('.caller-block[data-id="'+t.id+'"]')) c.appendChild(buildCallerBlock(t)); });
+    show($("no_blocks_msg"), c.querySelectorAll(".caller-block").length===0);
   }
 
-  function addCustomType() {
-    const inp = document.getElementById("custom_type_input");
-    const name = inp.value.trim();
-    if (!name) return;
-    const id = "custom_" + name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
-    if (customTypes.find(t => t.id === id)) { inp.value = ""; return; }
-    customTypes.push({ name, id });
-    inp.value = "";
-    syncBlocks();
-  }
-
-  function removeCustomType(id) {
-    const i = customTypes.findIndex(t => t.id === id);
-    if (i > -1) customTypes.splice(i, 1);
-    syncBlocks();
-  }
-
-  function syncBlocks() {
-    // PNC card visibility
-    const types = selectedNativeTypes().concat(customTypes);
-    show(document.getElementById("pnc_card"), !!selectedNativeTypes().find(t => t.id === "pnc"));
-
-    const container = document.getElementById("caller_blocks");
-    const wanted = new Set(types.map(t => t.id));
-
-    // remove blocks no longer wanted
-    Array.from(container.querySelectorAll(".caller-block")).forEach(b => {
-      if (!wanted.has(b.dataset.id)) b.remove();
-    });
-
-    // add missing blocks, preserving existing
-    types.forEach(t => {
-      if (!container.querySelector('.caller-block[data-id="' + t.id + '"]')) {
-        container.appendChild(buildCallerBlock(t));
-      }
-    });
-
-    show(document.getElementById("no_blocks_msg"), container.querySelectorAll(".caller-block").length === 0);
-  }
-
-  function buildCallerBlock(t) {
-    const isCustom = t.id.startsWith("custom_");
-    const block = document.createElement("div");
-    block.className = "caller-block";
-    block.dataset.id = t.id;
-    block.dataset.name = t.name;
-
-    const collectChecks = COLLECT_FIELDS.map(f =>
-      `<label><input type="checkbox" class="cb-collect" value="${f}"> ${f}</label>`
-    ).join("");
-
-    block.innerHTML = `
-      <h3>${t.name}${isCustom ? ' <button class="small danger" type="button" onclick="removeCustomType(\'' + t.id + '\')">remove</button>' : ''}</h3>
-      <div class="field">
-        <label class="lbl">Collect</label>
-        <div class="checks">${collectChecks}</div>
+  function buildCallerBlock(t){
+    const isCustom=t.id.startsWith("custom_");
+    const b=document.createElement("div");
+    b.className="caller-block"; b.dataset.id=t.id; b.dataset.name=t.name;
+    const checks=COLLECT_FIELDS.map(f=>`<label><input type="checkbox" class="cb-collect" value="${f}"> ${f}</label>`).join("");
+    b.innerHTML=`
+      <div class="block-head" onclick="toggleBlock(this)">
+        <span><span class="caret">▾</span> ${t.name}</span>
+        ${isCustom?`<button class="small danger" type="button" onclick="event.stopPropagation();removeCustomType('${t.id}')">remove</button>`:''}
       </div>
-      <div class="field">
-        <label class="lbl">Other fields to collect <span class="opt">(comma separated, optional)</span></label>
-        <input type="text" class="collect-other" placeholder="e.g. Case number, Date of injury">
-      </div>
-      <div class="field">
-        <label class="lbl">Intake questions and any branches</label>
-        <textarea class="flows" placeholder="List each question AIR should ask, in order. Note branches inline.&#10;&#10;Example:&#10;Ask: Do you have workers' compensation insurance?&#10;  If yes -> get Business Name & Adjuster's name&#10;Ask: Claim number?&#10;Ask: Date of injury?&#10;Ask: Do you want to schedule an appointment?&#10;  If yes -> transfer to Shawna&#10;  If no -> end the call per the playbook"></textarea>
-      </div>
-      <div class="field">
-        <label class="lbl">How the call ends (for the simple, single-ending case)</label>
-        <select class="end-action" onchange="toggleEnd(this)">
-          <option value="">-- choose, or leave blank if endings are branch-specific (described above) --</option>
-          <option value="Transfer">Transfer</option>
-          <option value="Take a message">Take a message</option>
-          <option value="End call with message">End call with a message</option>
-          <option value="Schedule">Schedule an appointment</option>
-          <option value="Branch-specific">Multiple / branch-specific (see intake above)</option>
-        </select>
-        <div class="end-transfer sub hidden">
-          <div class="dest-row">
-            <input type="text" class="et-name" placeholder="Destination name (e.g. Shawna)">
-            <input type="text" class="et-number" placeholder="Phone number">
-            <input type="text" class="et-ext" placeholder="Ext (optional)">
+      <div class="block-body">
+        <div class="field">
+          <label class="lbl">Collect <span class="opt">(the data points AIR writes down)</span></label>
+          <div class="checks">${checks}</div>
+          <input type="text" class="collect-other" placeholder="Other data points, comma separated (e.g. Case number, Date of injury)" style="margin-top:8px">
+          <div class="eg">Questions about the situation go in the next box, not here.</div>
+        </div>
+        <div class="field">
+          <label class="lbl">Intake / questions <span class="opt">(what AIR asks, with any branches)</span></label>
+          <textarea class="flows" placeholder="One question per line, in order. Indent a branch with two spaces.&#10;&#10;Ask: Do you have workers' comp insurance?&#10;  If yes -> get the carrier and adjuster's name&#10;Ask: Claim number?&#10;Ask: Do you want to schedule an appointment?&#10;  If yes -> transfer to Shawna&#10;  If no -> end the call"></textarea>
+        </div>
+        <div class="field">
+          <label class="lbl">End action <span class="opt">(how the call wraps up)</span></label>
+          <select class="end-action" onchange="toggleEnd(this)">
+            <option value="">-- choose, or leave blank if endings differ by branch (described above) --</option>
+            <option value="Transfer">Transfer to a person / line</option>
+            <option value="Take a message">Take a message</option>
+            <option value="End call with message">End the call with a message</option>
+            <option value="Schedule">Schedule an appointment</option>
+            <option value="Branch-specific">Different per branch (see questions above)</option>
+          </select>
+          <div class="end-transfer sub hidden">
+            <div class="dest-row">
+              <input type="text" class="et-name" placeholder="Who (e.g. Shawna, Billing)">
+              <input type="text" class="et-number" placeholder="Phone number">
+              <input type="text" class="et-ext" placeholder="Ext (optional)">
+            </div>
+            <div class="eg">No number = we can't build the transfer.</div>
+          </div>
+          <div class="end-message sub hidden">
+            <label class="lbl">What AIR says</label>
+            <textarea class="em-text" placeholder="Thank you for sharing these details, someone will follow up shortly."></textarea>
+          </div>
+          <div class="end-schedule sub hidden">
+            <div class="row">
+              <div class="field"><label class="lbl">Type</label><input type="text" class="es-type" placeholder="phone / in-person"></div>
+              <div class="field"><label class="lbl">Length</label><input type="text" class="es-len" placeholder="15 min"></div>
+              <div class="field"><label class="lbl">Calendar</label><input type="text" class="es-cal" placeholder="optional"></div>
+            </div>
           </div>
         </div>
-        <div class="end-message sub hidden">
-          <label class="lbl">Message wording</label>
-          <textarea class="em-text" placeholder="What AIR says when taking the message / ending the call."></textarea>
+        <div class="field">
+          <label class="lbl">Urgency handling <span class="opt">(optional)</span></label>
+          <input type="text" class="urgency" placeholder="If urgent -> take a message and flag for immediate follow-up">
         </div>
-        <div class="end-schedule sub hidden">
-          <div class="row">
-            <div class="field"><label class="lbl">Type</label><input type="text" class="es-type" placeholder="phone / in-person"></div>
-            <div class="field"><label class="lbl">Length</label><input type="text" class="es-len" placeholder="e.g. 15 min"></div>
-            <div class="field"><label class="lbl">Calendar / appt type</label><input type="text" class="es-cal" placeholder="optional"></div>
-          </div>
-        </div>
-      </div>
-      <div class="field">
-        <label class="lbl">Urgency handling for this type <span class="opt">(optional)</span></label>
-        <input type="text" class="urgency" placeholder="e.g. If urgent -> take a message and flag for immediate follow-up">
-      </div>
-    `;
-    return block;
+      </div>`;
+    return b;
   }
 
-  function toggleEnd(sel) {
-    const block = sel.closest(".field");
-    const v = sel.value;
-    show(block.querySelector(".end-transfer"), v === "Transfer");
-    show(block.querySelector(".end-message"), v === "Take a message" || v === "End call with message");
-    show(block.querySelector(".end-schedule"), v === "Schedule");
+  function toggleBlock(head){ head.parentNode.classList.toggle("collapsed"); }
+  function toggleEnd(sel){
+    const f=sel.closest(".field"); const v=sel.value;
+    show(f.querySelector(".end-transfer"), v==="Transfer");
+    show(f.querySelector(".end-message"), v==="Take a message"||v==="End call with message");
+    show(f.querySelector(".end-schedule"), v==="Schedule");
   }
 
-  // ---- transfer destinations ----
-  function addDest(name, number, ext) {
-    const list = document.getElementById("dest_list");
-    const row = document.createElement("div");
-    row.className = "dest-row";
-    row.innerHTML = `
-      <input type="text" class="d-name" placeholder="Who / label (e.g. Billing, Shawna)" value="${name||''}">
+  /* ---------- destinations ---------- */
+  function addDest(name,number,ext){
+    const row=document.createElement("div"); row.className="dest-row";
+    row.innerHTML=`
+      <input type="text" class="d-name" placeholder="Who / label" value="${name||''}">
       <input type="text" class="d-number" placeholder="Phone number" value="${number||''}">
       <input type="text" class="d-ext" placeholder="Ext (optional)" value="${ext||''}">
-      <button class="small danger" type="button" onclick="this.parentNode.remove()">x</button>
-    `;
-    list.appendChild(row);
+      <button class="small danger" type="button" onclick="this.parentNode.remove();touch()">x</button>`;
+    $("dest_list").appendChild(row);
   }
 
-  // ---- payload generation ----
-  function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
-  function lines(textareaVal) { return textareaVal.split("\n").map(s => s.trim()).filter(Boolean); }
+  /* ---------- block data get/set ---------- */
+  function getBlockData(b){
+    return {
+      collect: Array.from(b.querySelectorAll(".cb-collect:checked")).map(c=>c.value),
+      other: b.querySelector(".collect-other").value,
+      flows: b.querySelector(".flows").value,
+      end: b.querySelector(".end-action").value,
+      et: {name:b.querySelector(".et-name").value, num:b.querySelector(".et-number").value, ext:b.querySelector(".et-ext").value},
+      em: b.querySelector(".em-text").value,
+      es: {type:b.querySelector(".es-type").value, len:b.querySelector(".es-len").value, cal:b.querySelector(".es-cal").value},
+      urgency: b.querySelector(".urgency").value,
+      collapsed: b.classList.contains("collapsed")
+    };
+  }
+  function setBlockData(b,d){
+    if(!d) return;
+    b.querySelectorAll(".cb-collect").forEach(c=>{ c.checked=(d.collect||[]).includes(c.value); });
+    b.querySelector(".collect-other").value=d.other||"";
+    b.querySelector(".flows").value=d.flows||"";
+    const sel=b.querySelector(".end-action"); sel.value=d.end||""; toggleEnd(sel);
+    if(d.et){ b.querySelector(".et-name").value=d.et.name||""; b.querySelector(".et-number").value=d.et.num||""; b.querySelector(".et-ext").value=d.et.ext||""; }
+    b.querySelector(".em-text").value=d.em||"";
+    if(d.es){ b.querySelector(".es-type").value=d.es.type||""; b.querySelector(".es-len").value=d.es.len||""; b.querySelector(".es-cal").value=d.es.cal||""; }
+    b.querySelector(".urgency").value=d.urgency||"";
+    b.classList.toggle("collapsed", !!d.collapsed);
+  }
 
-  function generate() {
-    const L = [];
-    const div = () => { L.push(""); L.push("---"); L.push(""); };
-    const acct = val("acct_name") || "[NEED FROM FIRM]";
+  /* ---------- collect transfer destinations (auto from blocks + manual) ---------- */
+  function gatherDests(){
+    const out=[]; const seen=new Set();
+    const add=(name,num,ext)=>{ if(!name&&!num) return; const key=(num||name).replace(/\D/g,"")||name.toLowerCase();
+      if(seen.has(key)) return; seen.add(key);
+      out.push("- "+(name||"[label]")+": "+(num||"[NUMBER NEEDED]")+(ext?" ext "+ext:"")); };
+    document.querySelectorAll(".caller-block").forEach(b=>{
+      if(b.querySelector(".end-action").value==="Transfer")
+        add(b.querySelector(".et-name").value.trim(), b.querySelector(".et-number").value.trim(), b.querySelector(".et-ext").value.trim());
+    });
+    document.querySelectorAll("#dest_list .dest-row").forEach(r=>{
+      add(r.querySelector(".d-name").value.trim(), r.querySelector(".d-number").value.trim(), r.querySelector(".d-ext").value.trim());
+    });
+    return out;
+  }
 
-    L.push("# AIR CAP REQUEST — " + acct);
+  /* ---------- build payload ---------- */
+  function buildPayload(){
+    const L=[]; const gaps=[]; const div=()=>{ L.push(""); L.push("---"); L.push(""); };
+    if(!val("acct_name")) gaps.push("Account name");
+    if(!val("greeting")) gaps.push("Greeting");
+    if(allTypes().length===0) gaps.push("At least one caller type");
+
+    L.push("# AIR CAP REQUEST — "+(val("acct_name")||"[NEED FROM FIRM]"));
     L.push("");
-    if (val("cob_name")) L.push("**Requested by:** " + val("cob_name"));
-    if (val("needed_by")) L.push("**Needed by:** " + val("needed_by"));
-    L.push("**Submitted:** " + new Date().toLocaleString());
+    if(val("cob_name")) L.push("**Requested by:** "+val("cob_name"));
+    if(val("needed_by")) L.push("**Needed by:** "+val("needed_by"));
     div();
 
-    // greeting
-    L.push("## GREETING");
-    L.push("");
-    L.push(val("greeting") ? '"' + val("greeting") + '"' : "[NEED FROM FIRM]");
+    L.push("## GREETING"); L.push("");
+    L.push(val("greeting")?'"'+val("greeting")+'"':"[NEED FROM FIRM]"); div();
+
+    L.push("## HOURS"); L.push("");
+    L.push("- Business hours: "+(val("biz_hours")||"not specified"));
+    const ah=$("after_hours").value;
+    L.push("- After hours: "+(ah==="messages"?"transfers become a take-a-message":ah==="custom"?(val("after_hours_custom")||"[describe]"):"same as business hours"));
     div();
 
-    // hours
-    L.push("## HOURS");
-    L.push("");
-    L.push("- Business hours: " + (val("biz_hours") || "not specified"));
-    const ah = document.getElementById("after_hours").value;
-    if (ah === "messages") L.push("- After hours: all transfers become a take-a-message");
-    else if (ah === "custom") L.push("- After hours: " + (val("after_hours_custom") || "[describe]"));
-    else L.push("- After hours: same as business hours");
-    div();
-
-    // routing
-    L.push("## ROUTING");
-    L.push("");
-    L.push("- Mode: " + (document.getElementById("routing_mode").value === "custom" ? "Custom routing (CAP defines caller types)" : "Rides on native playbooks"));
-    const allTypes = selectedNativeTypes().concat(customTypes).map(t => t.name);
-    L.push("- Caller types: " + (allTypes.length ? allTypes.join(", ") : "[NEED FROM FIRM]"));
-    if (document.querySelector('input[name=triage]:checked').value === "yes") {
-      L.push("");
-      L.push("**Triage question after greeting:**");
-      L.push('"' + (val("triage_q") || "[NEED FROM FIRM]") + '"');
-      const opts = lines(val("triage_opts"));
-      if (opts.length) { L.push("Options:"); opts.forEach(o => L.push("- " + o)); }
+    L.push("## ROUTING"); L.push("");
+    L.push("- Categories: "+($("routing_mode").value==="custom"?"custom (named below)":"Smith standard"));
+    L.push("- Caller types: "+(allTypes().length?allTypes().map(t=>t.name).join(", "):"[NEED FROM FIRM]"));
+    if(radio("triage")==="yes"){
+      L.push(""); L.push("**Sorting question after greeting:**");
+      L.push('"'+(val("triage_q")||"[NEED FROM FIRM]")+'"');
+      const o=lines(val("triage_opts")); if(o.length){ L.push("Choices:"); o.forEach(x=>L.push("- "+x)); }
     }
-    if (document.querySelector('input[name=gate]:checked').value === "yes") {
-      L.push("");
-      L.push("**Qualifier gate before routing:**");
-      L.push('- Question: "' + (val("gate_q") || "[NEED FROM FIRM]") + '"');
-      L.push("- Disqualifying answer: " + (val("gate_fail") || "[NEED FROM FIRM]"));
-      if (val("gate_collect")) L.push("- On disqualify, collect: " + val("gate_collect"));
-      if (val("gate_end")) L.push("- On disqualify, end: " + val("gate_end"));
+    if(radio("gate")==="yes"){
+      L.push(""); L.push("**Gate before sorting:**");
+      L.push('- Question: "'+(val("gate_q")||"[NEED FROM FIRM]")+'"');
+      L.push("- Turns away on: "+(val("gate_fail")||"[NEED FROM FIRM]"));
+      if(val("gate_collect")) L.push("- If turned away, collect: "+val("gate_collect"));
+      if(val("gate_end")) L.push("- If turned away, end: "+val("gate_end"));
     }
     div();
 
-    // pnc specifics
-    if (selectedNativeTypes().find(t => t.id === "pnc")) {
-      L.push("## PNC SPECIFICS");
-      L.push("");
-      if (document.getElementById("pnc_mode").value === "multiple") {
-        L.push("- Sub-playbooks:");
-        lines(val("pnc_subs")).forEach(s => L.push("  - " + s));
-      } else {
-        L.push("- Single PNC playbook");
-      }
-      if (document.querySelector('input[name=qualify]:checked').value === "yes") {
-        const pa = lines(val("practice_areas"));
-        if (pa.length) { L.push("- Practice areas handled:"); pa.forEach(p => L.push("  - " + p)); }
-        if (val("practice_not_listed")) L.push("- Practice areas not listed -> " + val("practice_not_listed"));
-        const sa = lines(val("service_areas"));
-        if (sa.length) { L.push("- Service areas covered:"); sa.forEach(s => L.push("  - " + s)); }
-        if (val("area_not_listed")) L.push("- Areas not covered -> " + val("area_not_listed"));
+    if(selectedNativeTypes().find(t=>t.id==="pnc")){
+      L.push("## NEW-CLIENT DETAILS"); L.push("");
+      if($("pnc_mode").value==="multiple"){ L.push("- Services / practice areas:"); lines(val("pnc_subs")).forEach(s=>L.push("  - "+s)); }
+      else L.push("- One path for all new clients");
+      if(radio("qualify")==="yes"){
+        const pa=lines(val("practice_areas")); if(pa.length){ L.push("- Practice areas handled:"); pa.forEach(p=>L.push("  - "+p)); }
+        if(val("practice_not_listed")) L.push("- Practice areas not listed -> "+val("practice_not_listed"));
+        const sa=lines(val("service_areas")); if(sa.length){ L.push("- Service areas covered:"); sa.forEach(s=>L.push("  - "+s)); }
+        if(val("area_not_listed")) L.push("- Areas not covered -> "+val("area_not_listed"));
       }
       div();
     }
 
-    // caller blocks
-    Array.from(document.querySelectorAll(".caller-block")).forEach(b => {
-      L.push("## " + b.dataset.name.toUpperCase());
-      L.push("");
-      const collect = Array.from(b.querySelectorAll(".cb-collect:checked")).map(c => c.value);
-      const other = b.querySelector(".collect-other").value.trim();
-      if (other) other.split(",").map(s => s.trim()).filter(Boolean).forEach(o => collect.push(o));
+    document.querySelectorAll(".caller-block").forEach(b=>{
+      L.push("## "+b.dataset.name.toUpperCase()); L.push("");
+      const collect=Array.from(b.querySelectorAll(".cb-collect:checked")).map(c=>c.value);
+      const other=b.querySelector(".collect-other").value.trim();
+      if(other) other.split(",").map(s=>s.trim()).filter(Boolean).forEach(o=>collect.push(o));
       L.push("**Collect:**");
-      if (collect.length) collect.forEach(c => L.push("- " + c));
-      else L.push("- [NEED FROM FIRM]");
-      const flows = b.querySelector(".flows").value;
-      if (flows.trim()) {
-        L.push("");
-        L.push("**Intake / flow:**");
-        flows.split("\n").forEach(raw => {
-          if (!raw.trim()) return;
-          const lead = raw.length - raw.trimStart().length;
-          L.push((lead >= 2 ? "  " : "") + "- " + raw.trim());
-        });
-      }
-      const ea = b.querySelector(".end-action").value;
-      let endLine = "";
-      if (ea === "Transfer") {
-        const nm = b.querySelector(".et-name").value.trim();
-        const num = b.querySelector(".et-number").value.trim();
-        const ext = b.querySelector(".et-ext").value.trim();
-        endLine = "Transfer to " + (nm || "[name]") + " - " + (num || "[NUMBER NEEDED]") + (ext ? " ext " + ext : "");
-      } else if (ea === "Take a message" || ea === "End call with message") {
-        const t = b.querySelector(".em-text").value.trim();
-        endLine = ea + (t ? ': "' + t + '"' : "");
-      } else if (ea === "Schedule") {
-        const parts = [b.querySelector(".es-type").value.trim(), b.querySelector(".es-len").value.trim(), b.querySelector(".es-cal").value.trim()].filter(Boolean);
-        endLine = "Schedule" + (parts.length ? " (" + parts.join(", ") + ")" : "");
-      } else if (ea === "Branch-specific") {
-        endLine = "branch-specific (see intake / flow above)";
-      }
-      if (endLine) { L.push(""); L.push("**End action:** " + endLine); }
-      const urg = b.querySelector(".urgency").value.trim();
-      if (urg) { L.push(""); L.push("**Urgency:** " + urg); }
+      if(collect.length) collect.forEach(c=>L.push("- "+c)); else { L.push("- [NEED FROM FIRM]"); gaps.push("Collect for "+b.dataset.name); }
+      const flows=b.querySelector(".flows").value;
+      if(flows.trim()){ L.push(""); L.push("**Intake / questions:**");
+        flows.split("\n").forEach(raw=>{ if(!raw.trim()) return; const lead=raw.length-raw.trimStart().length; L.push((lead>=2?"  ":"")+"- "+raw.trim()); }); }
+      const ea=b.querySelector(".end-action").value; let end="";
+      if(ea==="Transfer"){ const nm=b.querySelector(".et-name").value.trim(), num=b.querySelector(".et-number").value.trim(), ext=b.querySelector(".et-ext").value.trim();
+        if(!num) gaps.push("Transfer number for "+b.dataset.name);
+        end="Transfer to "+(nm||"[name]")+" - "+(num||"[NUMBER NEEDED]")+(ext?" ext "+ext:""); }
+      else if(ea==="Take a message"||ea==="End call with message"){ const t=b.querySelector(".em-text").value.trim(); end=ea+(t?': "'+t+'"':""); }
+      else if(ea==="Schedule"){ const p=[b.querySelector(".es-type").value.trim(),b.querySelector(".es-len").value.trim(),b.querySelector(".es-cal").value.trim()].filter(Boolean); end="Schedule"+(p.length?" ("+p.join(", ")+")":""); }
+      else if(ea==="Branch-specific") end="differs by branch (see questions above)";
+      if(end){ L.push(""); L.push("**End action:** "+end); }
+      const u=b.querySelector(".urgency").value.trim(); if(u){ L.push(""); L.push("**Urgency:** "+u); }
       div();
     });
 
-    // destinations
-    const dests = Array.from(document.querySelectorAll("#dest_list .dest-row")).map(r => {
-      const nm = r.querySelector(".d-name").value.trim();
-      const num = r.querySelector(".d-number").value.trim();
-      const ext = r.querySelector(".d-ext").value.trim();
-      if (!nm && !num) return null;
-      return "- " + (nm || "[label]") + ": " + (num || "[NUMBER NEEDED]") + (ext ? " ext " + ext : "");
-    }).filter(Boolean);
-    if (dests.length) { L.push("## TRANSFER DESTINATIONS"); L.push(""); dests.forEach(d => L.push(d)); div(); }
+    const d=gatherDests();
+    if(d.length){ L.push("## TRANSFER DESTINATIONS"); L.push(""); d.forEach(x=>L.push(x)); div(); }
 
-    // cross-cutting
-    const cc = [];
-    if (val("human_rule")) cc.push("Asks for a human -> " + val("human_rule"));
-    if (val("faq_rule")) cc.push("Question not in FAQs -> " + val("faq_rule"));
-    if (val("spam_rule")) cc.push("Spam / sales -> " + val("spam_rule"));
-    if (cc.length) { L.push("## CROSS-CUTTING RULES"); L.push(""); cc.forEach(c => L.push("- " + c)); div(); }
+    const cc=[];
+    if(val("human_rule")) cc.push("Asks for a human -> "+val("human_rule"));
+    if(val("faq_rule")) cc.push("Question not in FAQs -> "+val("faq_rule"));
+    if(val("spam_rule")) cc.push("Spam / sales -> "+val("spam_rule"));
+    if(cc.length){ L.push("## RULES FOR ANY CALLER"); L.push(""); cc.forEach(c=>L.push("- "+c)); div(); }
 
-    // extras
-    if (val("extras")) { L.push("## EXTRAS"); L.push(""); L.push(val("extras")); }
+    if(val("extras")){ L.push("## EXTRAS"); L.push(""); L.push(val("extras")); }
 
-    const o = document.getElementById("output");
-    o.value = L.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\n+---\n+$/,"").trim();
-    show(document.getElementById("output_card"), true);
-    document.getElementById("output_card").scrollIntoView({ behavior: "smooth" });
+    const text=L.join("\n").replace(/\n{3,}/g,"\n\n").replace(/\n+---\n*$/,"").trim();
+    return {text,gaps};
   }
 
-  function copyOutput() {
-    const o = document.getElementById("output");
-    o.select();
-    navigator.clipboard.writeText(o.value).then(() => {
-      const m = document.getElementById("copied_msg");
-      show(m, true);
-      setTimeout(() => show(m, false), 1800);
-    }).catch(() => { document.execCommand("copy"); });
+  /* ---------- preview + gaps ---------- */
+  function refresh(){
+    const {text,gaps}=buildPayload(); lastPayload=text;
+    $("preview").textContent=text;
+    const box=$("gaps_box");
+    if(gaps.length){ box.className="gaps"; box.innerHTML="Still needed before this is buildable:<ul>"+gaps.map(g=>"<li>"+g+"</li>").join("")+"</ul>"; }
+    else { box.className="gaps clean"; box.textContent="Looks complete."; }
   }
 
-  function resetForm() {
-    if (!confirm("Clear the whole form?")) return;
-    location.reload();
+  function copyOutput(){
+    refresh();
+    navigator.clipboard.writeText(lastPayload).then(()=>{ const m=$("copied_msg"); show(m,true); setTimeout(()=>show(m,false),1800); })
+      .catch(()=>{ const t=document.createElement("textarea"); t.value=lastPayload; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); });
   }
 
-  // seed one empty destination row
-  addDest();
+  /* ---------- autosave ---------- */
+  let saveTimer=null;
+  function scheduleSave(){ $("saved").textContent="Saving…"; clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>{ try{ localStorage.setItem(STORE, JSON.stringify(getState())); $("saved").textContent="Saved ✓"; }catch(e){ $("saved").textContent=""; } }, 400); }
+  function touch(){ scheduleSave(); refresh(); }
+
+  function getState(){
+    const fields={}; FIELD_IDS.forEach(id=>{ const e=$(id); if(e) fields[id]=e.value; });
+    const radios={triage:radio("triage"),gate:radio("gate"),qualify:radio("qualify")};
+    const blocks={}; document.querySelectorAll(".caller-block").forEach(b=>{ blocks[b.dataset.id]=getBlockData(b); });
+    const dests=Array.from(document.querySelectorAll("#dest_list .dest-row")).map(r=>({name:r.querySelector(".d-name").value,num:r.querySelector(".d-number").value,ext:r.querySelector(".d-ext").value}));
+    return {v:2, fields, radios, nativeTypes:selectedNativeTypes().map(t=>t.id), customTypes:customTypes.slice(), blocks, dests};
+  }
+
+  function applyState(s){
+    if(!s) return;
+    FIELD_IDS.forEach(id=>{ if(s.fields&&id in s.fields){ const e=$(id); if(e) e.value=s.fields[id]; } });
+    if(s.radios) Object.keys(s.radios).forEach(n=>{ if(s.radios[n]){ const e=document.querySelector('input[name='+n+'][value="'+s.radios[n]+'"]'); if(e) e.checked=true; } });
+    document.querySelectorAll(".ct").forEach(c=>{ c.checked=(s.nativeTypes||[]).includes(c.dataset.id); });
+    customTypes.length=0; (s.customTypes||[]).forEach(t=>customTypes.push(t));
+    syncBlocks();
+    if(s.blocks) Object.keys(s.blocks).forEach(id=>{ const b=document.querySelector('.caller-block[data-id="'+id+'"]'); if(b) setBlockData(b,s.blocks[id]); });
+    $("dest_list").innerHTML="";
+    (s.dests&&s.dests.length?s.dests:[{}]).forEach(d=>addDest(d.name,d.num,d.ext));
+    syncConditionals();
+  }
+
+  function loadState(){ try{ const raw=localStorage.getItem(STORE); if(!raw) return false; applyState(JSON.parse(raw)); return true; }catch(e){ return false; } }
+  function startFresh(){ localStorage.removeItem(STORE); location.reload(); }
+  function resetForm(){ if(confirm("Clear the whole form?")){ localStorage.removeItem(STORE); location.reload(); } }
+
+  /* ---------- example ---------- */
+  function loadExample(){
+    if(!confirm("Load the Clog Squad example? This replaces what's in the form.")) return;
+    const ex={ v:2,
+      fields:{ acct_name:"Clog Squad", greeting:"Thanks for calling Clog Squad. How can I help you today?",
+        after_hours:"", routing_mode:"custom",
+        triage_q:"Can I ask what kind of issue you're experiencing today? For example, is it a drain clog, flooding, or equipment-related?",
+        triage_opts:"Drain cleaning\nFlooding / basement water\nEquipment inquiries\nRelining pipes\nAll other callers" },
+      radios:{triage:"yes",gate:"no",qualify:"no"},
+      nativeTypes:[],
+      customTypes:[{name:"Service Request",id:"custom_service_request"},{name:"Existing Client",id:"custom_existing_client"},{name:"Billing",id:"custom_billing"},{name:"All Other Calls",id:"custom_all_other_calls"}],
+      blocks:{
+        custom_service_request:{ collect:["Name","Number","Reason for call","Address","How did you hear about us","Email"],
+          flows:"Ask: Is water currently backing up or causing damage, or can it wait until tomorrow?\n  If urgent -> take a message, someone follows up as soon as possible\n  If not urgent -> passed to the on-call technician, follow up soon",
+          end:"Branch-specific" },
+        custom_existing_client:{ collect:["Name","Number","Reason for call"], end:"Take a message",
+          em:"Thank you for sharing these details, I'll share this with the team and someone will follow up once available." },
+        custom_billing:{ collect:["Name","Number","Reason for call"], end:"Transfer", et:{name:"Billing",num:"(269) 264-4845",ext:""} },
+        custom_all_other_calls:{ collect:["Name","Number","Reason for call"], end:"Take a message",
+          em:"Thank you for sharing these details, I'll share this with the team and someone will follow up once available." }
+      },
+      dests:[] };
+    applyState(ex); touch();
+  }
+
+  /* ---------- nav ---------- */
+  function buildNav(){
+    $("toc").innerHTML=NAV.map(([id,label])=>'<a href="#'+id+'">'+label+'</a>').join("");
+    const obs=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){
+      document.querySelectorAll("nav.toc a").forEach(a=>a.classList.remove("active"));
+      const a=document.querySelector('nav.toc a[href="#'+e.target.id+'"]'); if(a) a.classList.add("active"); } }); },
+      {rootMargin:"-8% 0px -82% 0px"});
+    NAV.forEach(([id])=>{ const el=$(id); if(el) obs.observe(el); });
+  }
+
+  /* ---------- init ---------- */
+  (function init(){
+    buildNav();
+    const restored=loadState();
+    if(!restored){ syncBlocks(); addDest(); }
+    document.addEventListener("input", touch);
+    document.addEventListener("change", touch);
+    refresh();
+    if(restored) show($("banner"), true);
+  })();
 </script>
 </body>
 </html>
