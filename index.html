@@ -117,7 +117,7 @@
 
 <div class="topbar">
   <h1>AIR CAP Request</h1>
-  <span class="sub">Fill this out, then copy the request into your build ticket.</span>
+  <span class="sub">Describe the custom call handling you want (the CAP), then copy it into your build ticket.</span>
   <button class="small" type="button" onclick="loadExample()">Load example</button>
   <button class="small" type="button" onclick="resetForm()">Reset</button>
   <button class="small primary" type="button" onclick="copyOutput()">Copy request</button>
@@ -135,6 +135,17 @@
     <div class="banner hidden" id="banner">
       <span>Draft restored from where you left off.</span>
       <button class="small" type="button" onclick="startFresh()">Start fresh</button>
+    </div>
+
+    <!-- INTRO -->
+    <div class="card" id="sec-intro" style="background:var(--soft);border-color:#d6e0fb;">
+      <h2>What this form captures</h2>
+      <p class="ask" style="margin-bottom:0;color:var(--ink);font-size:13.5px;line-height:1.5">
+        Your answers become the <b>custom call-handling instructions</b> we build into this account's AI Receptionist — the CAP.
+        Describe the routing, questions, and call endings you want AIR to follow. You're telling us what AIR <b>should do</b>, not documenting the whole account.
+        No need to re-state what AIR already does on its own (it always takes the caller's name and number and asks "is there anything else?" before ending)
+        or what's configured elsewhere (FAQs, company info, scheduling).
+      </p>
     </div>
 
     <!-- 1 ACCOUNT -->
@@ -191,11 +202,11 @@
 
     <!-- 4 ROUTING -->
     <div class="card" id="sec-routing">
-      <h2><span class="step">4.</span>Who might call, and how does AIR sort them?</h2>
-      <p class="ask">Pick the kinds of callers. A section for each one shows up below.</p>
+      <h2><span class="step">4.</span>Which callers should the CAP handle, and how should AIR sort them?</h2>
+      <p class="ask">Pick the caller types this CAP should cover. A section for each one shows up below.</p>
 
       <div class="field">
-        <label class="lbl">What kind of caller categories does the firm use?
+        <label class="lbl">Which caller categories should this CAP use?
           <span class="tip" title="Smith's standard categories: New clients (PNC), Existing clients (EC), Attorney/Court staff, and All other calls. 'Custom' means you name the caller types yourself, like Service Request, Billing, Student.">i</span>
         </label>
         <select id="routing_mode">
@@ -205,7 +216,7 @@
       </div>
 
       <div class="field">
-        <label class="lbl">Which caller types will this use?</label>
+        <label class="lbl">Which caller types should this CAP cover?</label>
         <div class="checks">
           <label><input type="checkbox" class="ct" value="Potential New Clients" data-id="pnc" onchange="syncBlocks()"> New clients <span class="opt">(PNC)</span></label>
           <label><input type="checkbox" class="ct" value="Existing Clients" data-id="ec" onchange="syncBlocks()"> Existing clients <span class="opt">(EC)</span></label>
@@ -331,7 +342,7 @@
 
     <!-- 6 CALLER BLOCKS -->
     <div class="card" id="sec-callers">
-      <h2><span class="step">6.</span>What does AIR do for each caller?</h2>
+      <h2><span class="step">6.</span>For each caller, what should the CAP have AIR do?</h2>
       <p class="ask">One block per caller type you picked. Click a block's title to open or close it.</p>
       <div class="legend">
         <b>Collect</b> = the data points AIR writes down (Name, Number, Email...).&nbsp;
